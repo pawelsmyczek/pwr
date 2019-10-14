@@ -1,0 +1,26 @@
+MODULE main
+VAR cyfra : 0..9;
+VAR etap : {zamkniety, pierwszaZapadkaOtwarta, drugaZapadkaOtwarta, otwarty};
+
+INIT etap = otwarty;
+
+TRANS next(cyfra) in case
+  etap = zamkniety : cyfra;
+  TRUE : 0..9;
+esac;
+
+TRANS next(etap) in case
+  etap = otwarty: etap;
+  next(cyfra) = 1 : pierwszaZapadkaOtwarta;
+  next(cyfra) = 5 & etap = pierwszaZapadkaOtwarta : drugaZapadkaOtwarta;
+  next(cyfra) = 9 & etap = drugaZapadkaOtwarta : otwarty;
+  TRUE : zamkniety;
+esac;
+
+CTLSPEC EF(etap = otwarty)
+CTLSPEC AG(etap = otwarty -> AF etap = otwarty)
+CTLSPEC !AF(!E [etap = otwarty U cyfra = 1 -> AX cyfra = 5 -> AX cyfra = 9])
+CTLSPEC AG(cyfra in 0..9)
+CTLSPEC AG(etap = pierwszaZapadkaOtwarta & AX(cyfra = 5) -> AF etap = drugaZapadkaOtwarta)
+CTLSPEC AG(etap = pierwszaZapadkaOtwarta & etap = drugaZapadkaOtwarta & AX(cyfra = 9) -> AX etap = otwarty)
+CTLSPEC AG(etap = drugaZapadkaOtwarta & AX(cyfra = 9) -> !EF etap = zamkniety)

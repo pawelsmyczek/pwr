@@ -1,0 +1,70 @@
+MODULE main
+VAR Rok: rok(Miesiac);
+VAR Miesiac: miesiac(Rok);
+
+CTLSPEC EF (Miesiac.miesiac = luty)
+CTLSPEC !EF ( Rok.czyPrzestepny = tak & Miesiac.miesiac = luty & Miesiac.dzien > 29 )
+CTLSPEC !EF ( Rok.czyPrzestepny = nie & Miesiac.miesiac = luty & Miesiac.dzien > 28 )
+CTLSPEC AG (Miesiac.miesiac = grudzien -> AF Miesiac.miesiac = styczen)
+CTLSPEC EF ( Miesiac.dzien = 31 & Miesiac.miesiac = grudzien )
+CTLSPEC AG ( EF(Rok.rok = 2019)  )
+CTLSPEC AG (Miesiac.miesiac = grudzien & Miesiac.dzien = 31 & Rok.rok != 2019 -> AX Miesiac.miesiac = styczen)
+CTLSPEC AG ((Rok.rok mod 4 = 0 & Rok.rok mod 100 != 0) | Rok.rok mod 400 = 0 <-> Rok.czyPrzestepny = tak)
+CTLSPEC AG ( Rok.czyPrzestepny = tak -> ( Miesiac.miesiac = luty -> Miesiac.dzien <= 29 ) )
+CTLSPEC AG ( Miesiac.miesiac = styczen -> A[ Miesiac.miesiac != grudzien U Miesiac.miesiac = grudzien & Miesiac.dzien = 31 -> AX Miesiac.miesiac = styczen ] )
+CTLSPEC AG ( Miesiac.miesiac = styczen & Rok.rok = 1950 -> A[Rok.rok = 1950 U Miesiac.miesiac = grudzien & AX Miesiac.miesiac = styczen ] )
+
+MODULE miesiac(rok)
+VAR dzien: 1..31;
+VAR miesiac : {
+  styczen,
+  luty,
+  marzec,
+  kwiecien,
+  maj,
+  czerwiec,
+  lipiec,
+  sierpien,
+  wrzesien,
+  pazdziernik,
+  listopad,
+  grudzien
+};
+ASSIGN
+  init(miesiac) := styczen;
+  init(dzien) := 1;
+  next(miesiac) := case
+    miesiac = styczen & dzien = 31 : luty;
+    miesiac = luty & rok.czyPrzestepny = tak & dzien = 29: marzec;
+    miesiac = luty & rok.czyPrzestepny = nie & dzien = 28: marzec;
+    miesiac = marzec & dzien = 31 : kwiecien;
+    miesiac = kwiecien & dzien = 30 : maj;
+    miesiac = maj & dzien = 31 : czerwiec;
+    miesiac = czerwiec & dzien = 30 : lipiec;
+    miesiac = lipiec & dzien = 31 : sierpien;
+    miesiac = sierpien & dzien = 31 : wrzesien;
+    miesiac = wrzesien & dzien = 30 : pazdziernik;
+    miesiac = pazdziernik & dzien = 31 : listopad;
+    miesiac = listopad & dzien = 30 : grudzien;
+    miesiac = grudzien & dzien = 31 : styczen;
+    TRUE: miesiac;
+  esac;
+  next(dzien) := case
+    miesiac = next(miesiac) & dzien < 31: dzien + 1;
+    TRUE: 1;
+  esac;
+
+MODULE rok(miesiac)
+VAR rok: 1900..2019;
+VAR czyPrzestepny: {tak, nie};
+ASSIGN
+  init(rok) := 1900;
+  init(czyPrzestepny) := nie;
+  next(czyPrzestepny) := case
+      (next(rok) mod 4 = 0 & next(rok) mod 100 != 0) | next(rok) mod 400 = 0 : tak;
+      TRUE: nie;
+  esac;
+  next(rok) := case
+    next(miesiac.miesiac) = styczen & next(miesiac.dzien) = 1 & rok < 2019 : rok + 1;
+    TRUE: rok;
+  esac;

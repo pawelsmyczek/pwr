@@ -1,0 +1,112 @@
+-- int number, i = 1, factorial = 1, sigma = 0, primes; s0
+-- cin << number; s1
+-- if(number > 2) { s2
+-- for(int j = 3; j <= number; j++) { s3
+-- factorial = 1; s4
+-- i = 1; s5
+-- for(int x = 0; x < j - 2; x++) { s6
+-- factorial = factorial * i; s7
+-- i++; } s8
+-- sigma = sigma + (factorial - j * (factorial / j)); } s9
+-- primes = -1 + sigma; s10
+-- if(number == 3) s11
+-- cout >> 2; s12
+-- else s13
+-- cout >> primes; s14
+-- } s15
+-- else s16
+-- cout >> “wrong number”; s17
+
+MODULE main
+FROZENVAR number : 0..8;
+VAR
+	s : { s2, s3, s4, s5, s6,
+		s7, s8, s9, s10, s11,
+		s12, s14, s15, s17};
+	i : 1..7;
+	factorial : 1..720;
+	sigma : 0..5;
+	primes : -1..4;
+	j : 3..9;
+	x : 0..7;
+	a : 0..6;
+
+ASSIGN
+	init(s) := s2;
+	next(s)	:= case
+		s=s2 & number > 2 : s3;
+		s=s2 & !(number > 2) : s17;
+		s=s3 & j <= number : s4;
+		s=s3 & !(j <= number) : s10;
+		s=s4 : s5;
+		s=s5 : s6;
+		s=s6 & x < j - 2 : s7;
+		s=s6 & !(x < j - 2) : s9;
+		s=s7 : s8;
+		s=s8 : s6;
+		s=s9 : s3;
+		s=s10 : s11;
+		s=s11 & number = 3 : s12;
+		s=s11 & !(number = 3) : s14;
+		s=s12 : s15;
+		s=s14 : s15;
+		TRUE : s;
+		esac;
+
+	init(i) := 1;
+	next(i) := case
+		next(s) = s5 :1;
+		i+1 > 7 : i;
+		next(s)=s8 : i+1;
+		TRUE : i;
+		esac;
+
+	init(factorial) := 1;
+	next(factorial) := case
+		next(s)=s4 : 1;
+		factorial * i > 720 : factorial;
+		next(s) = s7 : factorial * i;
+		TRUE : factorial;
+		esac;
+
+	init(sigma) := 0;
+	next(sigma) := case
+		sigma + (factorial - j * (factorial / j)) > 5 : sigma;
+		next(s)=s9 : sigma + (factorial - j * (factorial / j));
+		TRUE : sigma;
+		esac;
+
+	init(primes) := -1;
+	next(primes) := case
+		-1 + sigma >4 : primes;
+		next(s)=s10 : -1 + sigma;
+		next(s)=s12 : 2;
+		TRUE : primes;
+		esac;
+
+	init(j) := 3;
+	next(j) := case
+		j+1 > 9 : j;
+		s=s9 & next(s) = s3 : j+1;
+		TRUE : j;
+		esac;
+
+	init(x) := 0;
+	next(x) := case
+		s=s5 & next(s)=s6 : 0;
+		x + 1 > 7 : x;
+		s=s8 & next(s)=s6 : x + 1;
+		TRUE : x;
+		esac;
+
+	init(a) := 0;
+	next(a) := case
+		a + 1 > 6 : a;
+		next(s)=s4 : a + 1;
+		TRUE : a;
+		esac;
+
+CTLSPEC AG (number <= 2 -> EF(s = s17))
+CTLSPEC number = 3 -> !EF(s = s15)
+CTLSPEC number = 5 -> !EF(s = s15)
+CTLSPEC number = 8 -> !EF(s = s15)

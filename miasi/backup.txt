@@ -1,0 +1,7 @@
+CTLSPEC AG(etap = drugaZapadkaOtwarta & cyfra = 9 -> !EF etap = zamkniety)
+CTLSPEC AG(etap = pierwszaZapadkaOtwarta & etap = drugaZapadkaOtwarta & cyfra = 9 -> AX etap = otwarty)
+CTLSPEC AG(etap = pierwszaZapadkaOtwarta & cyfra = 5 -> AF etap = drugaZapadkaOtwarta)
+CTLSPEC AG(etap = otwarty -> AF etap = otwarty)
+CTLSPEC !AF(!E [cyfra = 1 -> AX cyfra = 5 -> AX cyfra = 9 U etap = otwarty])
+new
+CTLSPEC EF(cyfra > 9 | cyfra < 0)
